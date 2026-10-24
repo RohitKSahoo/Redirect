@@ -1,0 +1,12 @@
+<resources>
+  <string name="app_name">Redirect</string>
+  <string name="screen_detector_service_name">Redirect Screen Detector</string>
+  <string name="accessibility_service_description">Used temporarily by Redirect to detect and capture the exact settings screen you navigate to.</string>
+  <string name="quick_tile_1_label">Redirect Slot 1</string>
+  <string name="quick_tile_2_label">Redirect Slot 2</string>
+  <string name="quick_tile_3_label">Redirect Slot 3</string>
+  <string name="widget_bento_label">Redirect Bento Grid</string>
+  <string name="widget_bento_description">Interactive quick access to your top pinned deep settings</string>
+  <string name="widget_single_label">Redirect Single Shortcut</string>
+  <string name="widget_single_description">Direct 1x1 quick launch deep setting shortcut</string>
+</resources>
