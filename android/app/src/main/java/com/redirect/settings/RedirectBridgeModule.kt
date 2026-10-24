@@ -48,9 +48,9 @@ class RedirectBridgeModule(private val reactContext: ReactApplicationContext) :
         try {
             val prefs = reactContext.getSharedPreferences("RedirectSettingsPrefs", Context.MODE_PRIVATE)
             if (itemJsonStr.isBlank()) {
-                prefs.edit().remove("tile_slot_$slotIndex").apply()
+                prefs.edit().remove("tile_slot_$slotIndex").commit()
             } else {
-                prefs.edit().putString("tile_slot_$slotIndex", itemJsonStr).apply()
+                prefs.edit().putString("tile_slot_$slotIndex", itemJsonStr).commit()
             }
 
             // Immediately notify Quick Settings to refresh listening state

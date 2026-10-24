@@ -3,6 +3,11 @@ package com.redirect.settings
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.RectF
 import android.graphics.drawable.Icon
 import android.os.Build
 import android.service.quicksettings.Tile
@@ -12,6 +17,11 @@ import org.json.JSONObject
 abstract class BaseQuickTileService : TileService() {
 
     abstract val slotIndex: Int
+
+    override fun onTileAdded() {
+        super.onTileAdded()
+        updateTileState()
+    }
 
     override fun onStartListening() {
         super.onStartListening()
@@ -89,14 +99,14 @@ abstract class BaseQuickTileService : TileService() {
                 val json = JSONObject(slotData)
                 val title = json.optString("title", "Slot $slotIndex")
                 tile.label = title
+                tile.contentDescription = title
                 tile.state = Tile.STATE_ACTIVE
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     tile.subtitle = "Tap to launch"
                 }
 
                 // Show the selected option icon in the notification panel tile
-                val iconRes = getTileIconResource(json)
-                tile.icon = Icon.createWithResource(this, iconRes)
+                tile.icon = getTileIcon(json)
             } catch (e: Exception) {
                 tile.label = "Slot $slotIndex"
                 tile.state = Tile.STATE_INACTIVE
@@ -114,13 +124,49 @@ abstract class BaseQuickTileService : TileService() {
         tile.updateTile()
     }
 
-    private fun getTileIconResource(json: JSONObject): Int {
+    private fun getTileIcon(json: JSONObject): Icon {
         val icon = json.optString("icon", "").lowercase()
         val id = json.optString("id", "").lowercase()
         val action = json.optString("action", "").lowercase()
         val title = json.optString("title", "").lowercase()
 
-        return when {
+        val resId = when {
+            // Bluetooth
+            icon.contains("bluetooth") || id.contains("bluetooth") || title.contains("bluetooth") || action.contains("bluetooth") ->
+                R.drawable.ic_tile_bluetooth
+
+            // NFC & Contactless
+            icon.contains("nfc") || id.contains("nfc") || title.contains("nfc") || action.contains("nfc") ->
+                R.drawable.ic_tile_nfc
+
+            // DNS / Private DNS
+            icon.contains("dns") || id.contains("dns") || title.contains("dns") ->
+                R.drawable.ic_tile_dns
+
+            // Display, Brightness & Screen
+            icon.contains("display") || icon.contains("screen") || icon.contains("rotation") || id.contains("display") || title.contains("display") || action.contains("display") ->
+                R.drawable.ic_tile_display
+
+            // Volume, Sound & Audio
+            icon.contains("volume") || icon.contains("sound") || icon.contains("audio") || id.contains("sound") || title.contains("sound") || action.contains("sound") ->
+                R.drawable.ic_tile_volume
+
+            // Storage & Files
+            icon.contains("storage") || icon.contains("memory") || icon.contains("disk") || icon.contains("harddisk") || id.contains("storage") || title.contains("storage") || action.contains("storage") ->
+                R.drawable.ic_tile_storage
+
+            // Screen Cast / Mirroring
+            icon.contains("cast") || id.contains("cast") || title.contains("cast") || action.contains("cast") ->
+                R.drawable.ic_tile_cast
+
+            // Fingerprint & Biometrics
+            icon.contains("fingerprint") || icon.contains("biometric") || id.contains("fingerprint") || title.contains("fingerprint") || title.contains("face") ->
+                R.drawable.ic_tile_fingerprint
+
+            // Alarms & Clock
+            icon.contains("clock") || icon.contains("alarm") || id.contains("alarm") || title.contains("alarm") ->
+                R.drawable.ic_tile_clock
+
             // Developer Options
             icon.contains("developer") || icon.contains("code") || id.contains("dev") || title.contains("developer") || action.contains("development") ->
                 R.drawable.ic_tile_developer
@@ -130,7 +176,7 @@ abstract class BaseQuickTileService : TileService() {
                 R.drawable.ic_tile_accessibility
 
             // Wifi / Wireless Debugging
-            icon.contains("wifi") || id.contains("wireless") || title.contains("wireless") ->
+            icon.contains("wifi") || id.contains("wireless") || title.contains("wireless") || action.contains("wireless") ->
                 R.drawable.ic_tile_wifi
 
             // Display Over Other Apps (Overlay)
@@ -141,12 +187,12 @@ abstract class BaseQuickTileService : TileService() {
             icon.contains("package") || id.contains("unknown") || title.contains("unknown") || action.contains("unknown") ->
                 R.drawable.ic_tile_package
 
-            // Notification Access
+            // Notification Access & History
             icon.contains("bell") || id.contains("notification") || title.contains("notification") || action.contains("notification") ->
                 R.drawable.ic_tile_notification
 
-            // Security & Biometrics
-            icon.contains("shield") || icon.contains("lock") || id.contains("security") || title.contains("security") || action.contains("security") ->
+            // Security & Privacy
+            icon.contains("shield") || icon.contains("lock") || id.contains("security") || title.contains("security") || action.contains("security") || id.contains("privacy") || title.contains("privacy") ->
                 R.drawable.ic_tile_security
 
             // Location Services
@@ -165,9 +211,44 @@ abstract class BaseQuickTileService : TileService() {
             icon.contains("phone") || icon.contains("cellphone") || id.contains("default_apps") || title.contains("default") ->
                 R.drawable.ic_tile_phone_cog
 
-            // Default fallback settings gear icon
-            else -> R.drawable.ic_quick_tile
+            else -> null
+        }
+
+        return if (resId != null) {
+            Icon.createWithResource(this, resId)
+        } else {
+            // Dynamically generate a sharp monochromatic icon with the shortcut's initial letter
+            val bitmap = createTileMonochromeBitmap(title)
+            Icon.createWithBitmap(bitmap)
         }
     }
-}
 
+    private fun createTileMonochromeBitmap(title: String): Bitmap {
+        val size = 96
+        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+
+        // Draw clean white circular outline
+        val strokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.WHITE
+            style = Paint.Style.STROKE
+            strokeWidth = 6f
+        }
+        val circleRect = RectF(6f, 6f, (size - 6).toFloat(), (size - 6).toFloat())
+        canvas.drawRoundRect(circleRect, 16f, 16f, strokePaint)
+
+        // Draw bold uppercase character in center
+        val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.WHITE
+            textSize = 48f
+            textAlign = Paint.Align.CENTER
+            isFakeBoldText = true
+        }
+
+        val initial = title.firstOrNull { it.isLetterOrDigit() }?.uppercaseChar()?.toString() ?: "S"
+        val yPos = (canvas.height / 2f) - ((textPaint.descent() + textPaint.ascent()) / 2f)
+        canvas.drawText(initial, canvas.width / 2f, yPos, textPaint)
+
+        return bitmap
+    }
+}

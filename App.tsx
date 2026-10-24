@@ -319,6 +319,11 @@ export default function App() {
         visible={settingsVisible}
         onClose={() => setSettingsVisible(false)}
         deviceContext={deviceContext}
+        onOpenTilesModal={() => {
+          setSettingsVisible(false);
+          setQuickTileTargetItem(null);
+          setQuickTileModalVisible(true);
+        }}
       />
 
       <IntentErrorModal

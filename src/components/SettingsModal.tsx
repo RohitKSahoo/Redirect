@@ -18,12 +18,14 @@ interface SettingsModalProps {
   visible: boolean;
   onClose: () => void;
   deviceContext: DeviceContext;
+  onOpenTilesModal?: () => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
   visible,
   onClose,
   deviceContext,
+  onOpenTilesModal,
 }) => {
   const topInset = Platform.OS === 'android' ? (RNStatusBar.currentHeight || 28) + 8 : 44;
 
@@ -111,7 +113,36 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </View>
           </View>
 
-          {/* SECTION 2: COMING SOON FEATURES */}
+          {/* SECTION 2: QUICK SETTINGS TILES */}
+          {onOpenTilesModal && (
+            <View style={styles.section}>
+              <View style={styles.sectionHeaderRow}>
+                <MaterialCommunityIcons name="view-dashboard-outline" size={16} color={Colors.textSecondary} />
+                <Text style={styles.sectionTitle}>QUICK SETTINGS TILES</Text>
+              </View>
+
+              <TouchableOpacity
+                style={[styles.card, styles.interactiveCard]}
+                onPress={onOpenTilesModal}
+                activeOpacity={0.75}
+              >
+                <View style={styles.tileSettingRow}>
+                  <View style={styles.tileSettingIconBox}>
+                    <MaterialCommunityIcons name="view-dashboard-outline" size={22} color={Colors.textPrimary} />
+                  </View>
+                  <View style={styles.tileSettingTextGroup}>
+                    <Text style={styles.tileSettingTitle}>Configure Quick Settings Tiles</Text>
+                    <Text style={styles.tileSettingSubtitle}>
+                      Assign up to 3 custom shortcuts to your notification pulldown shade
+                    </Text>
+                  </View>
+                  <MaterialCommunityIcons name="chevron-right" size={20} color={Colors.textMuted} />
+                </View>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* SECTION 3: COMING SOON FEATURES */}
           <View style={styles.section}>
             <View style={styles.sectionHeaderRow}>
               <MaterialCommunityIcons name="rocket-launch-outline" size={16} color={Colors.textSecondary} />
@@ -367,5 +398,37 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.glassBorder,
     marginLeft: 8,
+  },
+  interactiveCard: {
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+  },
+  tileSettingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  tileSettingIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 4,
+    backgroundColor: 'rgba(58, 134, 255, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tileSettingTextGroup: {
+    flex: 1,
+  },
+  tileSettingTitle: {
+    fontSize: 13.5,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  tileSettingSubtitle: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    fontWeight: '500',
+    marginTop: 2,
+    lineHeight: 15,
   },
 });
