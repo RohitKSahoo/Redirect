@@ -3,7 +3,7 @@ import {
   StyleSheet,
   View,
   Text,
-  FlatList,
+  ScrollView,
   Alert,
   Platform,
   StatusBar as RNStatusBar,
@@ -18,6 +18,8 @@ import { SettingCategory, SettingItem, DeviceContext, UserPreferences } from './
 import { Header } from './src/components/Header';
 import { SearchBar } from './src/components/SearchBar';
 import { FilterDropdown } from './src/components/FilterDropdown';
+import { StarredCarousel } from './src/components/StarredCarousel';
+import { CollapsibleCategorySection } from './src/components/CollapsibleCategorySection';
 import { SettingActionCard } from './src/components/SettingActionCard';
 import { DiagnosticsModal } from './src/components/DiagnosticsModal';
 import { IntentErrorModal } from './src/components/IntentErrorModal';
@@ -29,10 +31,20 @@ import { getDeviceContext } from './src/services/deviceService';
 import { StorageService } from './src/services/storageService';
 import { NativeBridge } from './src/services/nativeBridgeService';
 
+const CATEGORY_CONFIG: { key: string; title: string; icon: string }[] = [
+  { key: 'custom', title: 'Custom Shortcuts', icon: 'tune' },
+  { key: 'banking', title: 'Banking & UPI Security', icon: 'shield-check-outline' },
+  { key: 'developer', title: 'Developer & Debugging', icon: 'code-tags' },
+  { key: 'permissions', title: 'Special App Permissions', icon: 'layers-outline' },
+  { key: 'privacy', title: 'Privacy & Sensors', icon: 'shield-lock-outline' },
+  { key: 'system', title: 'System & Battery', icon: 'cellphone-cog' },
+];
+
 export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<SettingCategory>('all');
   const [pinnedIds, setPinnedIds] = useState<string[]>(['dev_options', 'accessibility_settings']);
+  const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
   const [customSettings, setCustomSettings] = useState<SettingItem[]>([]);
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [filterDropdownVisible, setFilterDropdownVisible] = useState(false);
@@ -135,6 +147,14 @@ export default function App() {
     );
   }, [pinnedIds, handleTogglePin, triggerHaptic]);
 
+  const handleToggleCategory = useCallback(async (key: string) => {
+    await triggerHaptic();
+    setCollapsedCategories(prev => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  }, [triggerHaptic]);
+
   // Automatically sync pinned items to Android Native SharedPreferences (for Bento and 1x1 widgets)
   useEffect(() => {
     if (Platform.OS === 'android') {
@@ -161,6 +181,29 @@ export default function App() {
       return matchTitle || matchDesc || matchKeyword;
     });
   }, [allAvailableSettings, searchQuery, selectedCategory]);
+
+  // Starred shortcuts list for the carousel
+  const starredSettings = useMemo(() => {
+    return allAvailableSettings.filter(item => pinnedIds.includes(item.id));
+  }, [allAvailableSettings, pinnedIds]);
+
+  // Grouped categories for collapsible accordions
+  const groupedCategories = useMemo(() => {
+    const isSearching = searchQuery.trim().length > 0;
+    return CATEGORY_CONFIG.map(cat => {
+      const items = filteredSettings.filter(item => {
+        if (cat.key === 'custom') return !!item.isCustom;
+        if (cat.key === 'banking') return !item.isCustom && item.isBankingCritical;
+        return !item.isCustom && !item.isBankingCritical && item.category === cat.key;
+      });
+      return {
+        ...cat,
+        items,
+        count: items.length,
+        isCollapsed: isSearching ? false : !!collapsedCategories[cat.key],
+      };
+    }).filter(cat => cat.count > 0);
+  }, [filteredSettings, searchQuery, collapsedCategories]);
 
   return (
     <View style={[styles.mainContainer, { paddingTop: topInset }]}>
@@ -203,42 +246,62 @@ export default function App() {
         </View>
       )}
 
-      {/* Bento Grid */}
-      <FlatList
-        data={filteredSettings}
-        keyExtractor={item => item.id}
-        numColumns={2}
-        key="bento-2-col"
-        columnWrapperStyle={styles.rowWrapper}
-        renderItem={({ item, index }) => {
-          // Highlight first banking/critical item as full-width bento hero if on 'all'
-          const isFeatured = index === 0 && selectedCategory === 'all' && !searchQuery;
-          return (
-            <SettingActionCard
-              item={item}
-              isPinned={pinnedIds.includes(item.id)}
-              onPress={() => handleLaunchItem(item)}
-              onTogglePin={() => handleTogglePin(item.id)}
-              onDelete={item.isCustom ? () => handleDeleteCustomItem(item) : undefined}
-              onOptionsPress={() => {
-                setCardActionsTargetItem(item);
-                setCardActionsModalVisible(true);
-              }}
-              isFeatured={isFeatured}
-            />
-          );
-        }}
-        ListEmptyComponent={
+      {/* Main Vertical Scroll Container */}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Starred Carousel - pinned shortcuts right above all categories */}
+        <StarredCarousel
+          starredItems={starredSettings}
+          onLaunchItem={handleLaunchItem}
+          onTogglePin={handleTogglePin}
+          onOptionsPress={item => {
+            setCardActionsTargetItem(item);
+            setCardActionsModalVisible(true);
+          }}
+        />
+
+        {/* Collapsible Category Sections with 2-column Bento Grid */}
+        {groupedCategories.length > 0 ? (
+          groupedCategories.map(cat => (
+            <CollapsibleCategorySection
+              key={cat.key}
+              title={cat.title}
+              icon={cat.icon}
+              count={cat.count}
+              isCollapsed={cat.isCollapsed}
+              onToggle={() => handleToggleCategory(cat.key)}
+            >
+              <View style={styles.gridRow}>
+                {cat.items.map(item => (
+                  <View key={item.id} style={styles.gridCol}>
+                    <SettingActionCard
+                      item={item}
+                      isPinned={pinnedIds.includes(item.id)}
+                      onPress={() => handleLaunchItem(item)}
+                      onTogglePin={() => handleTogglePin(item.id)}
+                      onDelete={item.isCustom ? () => handleDeleteCustomItem(item) : undefined}
+                      onOptionsPress={() => {
+                        setCardActionsTargetItem(item);
+                        setCardActionsModalVisible(true);
+                      }}
+                    />
+                  </View>
+                ))}
+              </View>
+            </CollapsibleCategorySection>
+          ))
+        ) : (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyTitle}>No matching settings</Text>
             <Text style={styles.emptySubtitle}>
               Try searching or tap "+ Add" in the top header to create a custom shortcut.
             </Text>
           </View>
-        }
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      />
+        )}
+      </ScrollView>
 
       {/* Anchored Dropdown from Tune Icon */}
       <FilterDropdown
@@ -348,13 +411,19 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     fontWeight: '800',
   },
-  rowWrapper: {
-    justifyContent: 'space-between',
-    paddingHorizontal: 12,
+  scrollView: {
+    flex: 1,
   },
-  listContent: {
-    paddingBottom: 32,
+  scrollContent: {
     paddingTop: 4,
+    paddingBottom: 40,
+  },
+  gridRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  gridCol: {
+    width: '50%',
   },
   emptyContainer: {
     padding: 40,

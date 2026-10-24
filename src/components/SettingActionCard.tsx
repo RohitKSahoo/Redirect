@@ -11,7 +11,7 @@ interface SettingActionCardProps {
   onTogglePin: () => void;
   onDelete?: () => void;
   onOptionsPress?: () => void;
-  isFeatured?: boolean; // Bento variation for full-width featured tiles
+  isFeatured?: boolean;
 }
 
 export const SettingActionCard: React.FC<SettingActionCardProps> = ({
@@ -19,26 +19,21 @@ export const SettingActionCard: React.FC<SettingActionCardProps> = ({
   isPinned,
   onPress,
   onTogglePin,
-  onDelete,
   onOptionsPress,
-  isFeatured = false,
 }) => {
   return (
     <TouchableOpacity
-      style={[
-        styles.bentoTile,
-        isFeatured ? styles.featuredTile : styles.standardTile,
-      ]}
+      style={styles.bentoTile}
       onPress={onPress}
       onLongPress={onOptionsPress}
-      activeOpacity={0.8}
+      activeOpacity={0.75}
     >
       {/* Top Header of Bento Tile: Icon & Actions */}
       <View style={styles.tileTopRow}>
         <View style={styles.iconBox}>
           <MaterialCommunityIcons
             name={item.icon as any}
-            size={isFeatured ? 24 : 20}
+            size={20}
             color={Colors.textPrimary}
           />
         </View>
@@ -68,26 +63,14 @@ export const SettingActionCard: React.FC<SettingActionCardProps> = ({
         </View>
       </View>
 
-      {/* Middle: Title & Tags */}
+      {/* Middle: Title (Heading only - description removed) */}
       <View style={styles.tileContent}>
-        <View style={styles.titleRow}>
-          <Text
-            style={[styles.titleText, isFeatured && styles.featuredTitleText]}
-            numberOfLines={isFeatured ? 2 : 1}
-          >
-            {item.title}
-          </Text>
-        </View>
-
-        <Text
-          style={[styles.descText, isFeatured && styles.featuredDescText]}
-          numberOfLines={isFeatured ? 2 : 2}
-        >
-          {item.shortDescription}
+        <Text style={styles.titleText} numberOfLines={2}>
+          {item.title}
         </Text>
       </View>
 
-      {/* Bottom Footer: Badge Tag & Direct Arrow */}
+      {/* Bottom Footer: Direct Launch Indicator */}
       <View style={styles.tileFooter}>
         <View style={styles.badgeRow}>
           {item.isBankingCritical && (
@@ -100,15 +83,9 @@ export const SettingActionCard: React.FC<SettingActionCardProps> = ({
               <Text style={styles.customBadgeText}>CUSTOM</Text>
             </View>
           )}
-          {!item.isBankingCritical && !item.isCustom && (
-            <View style={styles.categoryBadge}>
-              <Text style={styles.categoryBadgeText}>{item.category.toUpperCase()}</Text>
-            </View>
-          )}
         </View>
-
         <View style={styles.arrowBox}>
-          <MaterialCommunityIcons name="arrow-top-right" size={14} color={Colors.textPrimary} />
+          <MaterialCommunityIcons name="arrow-top-right" size={12} color={Colors.textSecondary} />
         </View>
       </View>
     </TouchableOpacity>
@@ -119,26 +96,18 @@ const styles = StyleSheet.create({
   bentoTile: {
     backgroundColor: Colors.glassCard,
     borderRadius: 4, // Sharp corners
-    padding: 14,
+    padding: 12,
     borderWidth: 1.5,
     borderColor: Colors.glassBorder,
     shadowColor: Colors.glassShadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.9,
+    shadowRadius: 6,
     elevation: 2,
     justifyContent: 'space-between',
-  },
-  standardTile: {
-    flex: 1,
-    minHeight: 145,
+    minHeight: 110,
     margin: 4,
-  },
-  featuredTile: {
-    width: '100%',
-    minHeight: 125,
-    marginHorizontal: 0,
-    marginVertical: 4,
+    flex: 1,
   },
   tileTopRow: {
     flexDirection: 'row',
@@ -147,8 +116,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   iconBox: {
-    width: 38,
-    height: 38,
+    width: 34,
+    height: 34,
     borderRadius: 4, // Sharp corners
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     alignItems: 'center',
@@ -159,90 +128,66 @@ const styles = StyleSheet.create({
   topRightActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 2,
   },
   actionBtn: {
     padding: 4,
   },
   tileContent: {
     flex: 1,
+    justifyContent: 'center',
     marginVertical: 4,
   },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 2,
-  },
   titleText: {
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '800',
     color: Colors.textPrimary,
     letterSpacing: -0.2,
-  },
-  featuredTitleText: {
-    fontSize: 15,
-  },
-  descText: {
-    fontSize: 11,
-    color: Colors.textSecondary,
-    lineHeight: 14,
-    fontWeight: '500',
-  },
-  featuredDescText: {
-    fontSize: 12,
     lineHeight: 16,
   },
   tileFooter: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 8,
+    marginTop: 6,
   },
   badgeRow: {
     flexDirection: 'row',
     gap: 4,
   },
   criticalBadge: {
-    backgroundColor: 'rgba(215, 222, 232, 0.9)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    backgroundColor: 'rgba(255, 235, 235, 0.95)',
+    paddingHorizontal: 5,
+    paddingVertical: 1.5,
     borderRadius: 2, // Sharp corners
+    borderWidth: 1,
+    borderColor: 'rgba(255, 100, 100, 0.3)',
   },
   criticalBadgeText: {
-    fontSize: 8,
+    fontSize: 7.5,
     fontWeight: '900',
-    color: '#1E293B',
+    color: '#D32F2F',
     letterSpacing: 0.5,
   },
   customBadge: {
-    backgroundColor: 'rgba(235, 225, 255, 0.9)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    backgroundColor: 'rgba(235, 225, 255, 0.95)',
+    paddingHorizontal: 5,
+    paddingVertical: 1.5,
     borderRadius: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(126, 87, 194, 0.3)',
   },
   customBadgeText: {
-    fontSize: 8,
+    fontSize: 7.5,
     fontWeight: '900',
     color: '#6D28D9',
     letterSpacing: 0.5,
   },
-  categoryBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.65)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 2,
-  },
-  categoryBadgeText: {
-    fontSize: 8,
-    fontWeight: '800',
-    color: Colors.textSecondary,
-    letterSpacing: 0.5,
-  },
   arrowBox: {
-    width: 24,
-    height: 24,
+    width: 20,
+    height: 20,
     borderRadius: 2, // Sharp corners
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
