@@ -24,18 +24,22 @@ export const DiagnosticsModal: React.FC<DiagnosticsModalProps> = ({
     >
       <View style={styles.overlay}>
         <View style={styles.modalContent}>
+          <View style={styles.notchBar} />
+
           <View style={styles.modalHeader}>
             <View style={styles.iconTitleRow}>
-              <MaterialCommunityIcons name="information" size={22} color={Colors.primary} />
-              <Text style={styles.modalTitle}>Device Diagnostics</Text>
+              <View style={styles.iconCircle}>
+                <MaterialCommunityIcons name="information" size={20} color={Colors.emerald} />
+              </View>
+              <Text style={styles.modalTitle}>Device Info</Text>
             </View>
             <TouchableOpacity onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <MaterialCommunityIcons name="close" size={22} color={Colors.textSecondary} />
+              <MaterialCommunityIcons name="close-circle" size={24} color={Colors.textMuted} />
             </TouchableOpacity>
           </View>
 
           <Text style={styles.modalSubtitle}>
-            Redirect uses standard Android Intent Actions with OEM-specific fallbacks.
+            OEM detection ensures your device&apos;s customized settings paths are properly resolved.
           </Text>
 
           <View style={styles.infoCard}>
@@ -60,17 +64,10 @@ export const DiagnosticsModal: React.FC<DiagnosticsModalProps> = ({
             </View>
           </View>
 
-          <View style={styles.tipBox}>
-            <MaterialCommunityIcons name="shield-check" size={18} color={Colors.success} />
-            <Text style={styles.tipText}>
-              All settings intents execute completely on your device without root or extra permissions.
-            </Text>
-          </View>
-
           <TouchableOpacity
             style={styles.closeButton}
             onPress={onClose}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
           >
             <Text style={styles.closeButtonText}>Done</Text>
           </TouchableOpacity>
@@ -83,19 +80,30 @@ export const DiagnosticsModal: React.FC<DiagnosticsModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
-    justifyContent: 'center',
+    backgroundColor: 'rgba(15, 23, 42, 0.45)',
+    justifyContent: 'flex-end',
     alignItems: 'center',
-    padding: 20,
   },
   modalContent: {
     backgroundColor: Colors.surface,
-    borderRadius: 20,
-    padding: 20,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    padding: 24,
     width: '100%',
-    maxWidth: 360,
-    borderWidth: 1,
-    borderColor: Colors.surfaceBorder,
+    paddingBottom: 40,
+    shadowColor: Colors.surfaceShadow,
+    shadowOffset: { width: 0, height: -6 },
+    shadowOpacity: 1,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  notchBar: {
+    width: 44,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.surfaceBorder,
+    alignSelf: 'center',
+    marginBottom: 16,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -106,70 +114,63 @@ const styles = StyleSheet.create({
   iconTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
+  },
+  iconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: Colors.emeraldLight,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 20,
+    fontWeight: '800',
     color: Colors.textPrimary,
   },
   modalSubtitle: {
-    fontSize: 12,
+    fontSize: 13,
     color: Colors.textSecondary,
-    marginBottom: 16,
-    lineHeight: 16,
+    marginBottom: 18,
+    lineHeight: 18,
   },
   infoCard: {
     backgroundColor: Colors.background,
-    borderRadius: 14,
-    padding: 14,
+    borderRadius: 18,
+    padding: 16,
     borderWidth: 1,
     borderColor: Colors.surfaceBorder,
-    marginBottom: 16,
+    marginBottom: 20,
   },
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 6,
+    paddingVertical: 8,
   },
   infoLabel: {
     fontSize: 13,
-    color: Colors.textMuted,
+    color: Colors.textSecondary,
+    fontWeight: '500',
   },
   infoValue: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '700',
     color: Colors.textPrimary,
   },
   divider: {
     height: 1,
     backgroundColor: Colors.surfaceBorder,
-    marginVertical: 4,
-  },
-  tipBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: Colors.successGlow,
-    padding: 10,
-    borderRadius: 10,
-    marginBottom: 16,
-  },
-  tipText: {
-    flex: 1,
-    fontSize: 11,
-    color: Colors.success,
-    lineHeight: 15,
   },
   closeButton: {
-    backgroundColor: Colors.primary,
-    borderRadius: 12,
-    paddingVertical: 12,
+    backgroundColor: Colors.backgroundDark,
+    borderRadius: 18,
+    paddingVertical: 14,
     alignItems: 'center',
   },
   closeButtonText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '700',
     color: '#FFFFFF',
   },

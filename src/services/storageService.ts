@@ -76,4 +76,41 @@ export const StorageService = {
       console.warn('[StorageService] Error recording usage:', e);
     }
   },
+
+  async getCustomSettings(): Promise<import('../types').SettingItem[]> {
+    try {
+      const data = await AsyncStorage.getItem('@redirect_custom_settings');
+      if (data) {
+        return JSON.parse(data);
+      }
+      return [];
+    } catch (e) {
+      console.warn('[StorageService] Error loading custom settings:', e);
+      return [];
+    }
+  },
+
+  async addCustomSetting(item: import('../types').SettingItem): Promise<import('../types').SettingItem[]> {
+    try {
+      const current = await this.getCustomSettings();
+      const updated = [item, ...current];
+      await AsyncStorage.setItem('@redirect_custom_settings', JSON.stringify(updated));
+      return updated;
+    } catch (e) {
+      console.warn('[StorageService] Error adding custom setting:', e);
+      return [];
+    }
+  },
+
+  async deleteCustomSetting(id: string): Promise<import('../types').SettingItem[]> {
+    try {
+      const current = await this.getCustomSettings();
+      const updated = current.filter(item => item.id !== id);
+      await AsyncStorage.setItem('@redirect_custom_settings', JSON.stringify(updated));
+      return updated;
+    } catch (e) {
+      console.warn('[StorageService] Error deleting custom setting:', e);
+      return [];
+    }
+  },
 };

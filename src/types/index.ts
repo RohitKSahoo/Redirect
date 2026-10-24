@@ -26,6 +26,8 @@ export interface SettingItem {
   keywords: string[];         // Search keywords
   isBankingCritical: boolean; // Flagged for the "Banking Prep" quick flow
   stepOrder?: number;         // Step order in the banking prep wizard (1, 2, ...)
+  isCustom?: boolean;         // Flag indicating user-created custom setting
+  createdAt?: number;         // Creation timestamp
 }
 
 export interface UserPreferences {

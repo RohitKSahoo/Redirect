@@ -28,12 +28,12 @@ export const IntentErrorModal: React.FC<IntentErrorModalProps> = ({
       <View style={styles.overlay}>
         <View style={styles.modalContent}>
           <View style={styles.iconCircle}>
-            <MaterialCommunityIcons name="alert-circle-outline" size={32} color={Colors.warning} />
+            <MaterialCommunityIcons name="alert-circle-outline" size={32} color={Colors.orange} />
           </View>
 
           <Text style={styles.modalTitle}>OEM Custom Screen</Text>
           <Text style={styles.modalBody}>
-            Your device's custom skin (One UI / MIUI / ColorOS) may have moved "{title}" to a proprietary location.
+            Your device&apos;s custom skin (One UI / MIUI / ColorOS) may have moved &quot;{title}&quot; to a proprietary location.
           </Text>
 
           {errorMessage && (
@@ -45,7 +45,7 @@ export const IntentErrorModal: React.FC<IntentErrorModalProps> = ({
           <TouchableOpacity
             style={styles.primaryButton}
             onPress={onOpenRootSettings}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
           >
             <MaterialCommunityIcons name="cog" size={16} color="#FFFFFF" />
             <Text style={styles.primaryButtonText}>Open Main Settings</Text>
@@ -67,33 +67,38 @@ export const IntentErrorModal: React.FC<IntentErrorModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backgroundColor: 'rgba(15, 23, 42, 0.45)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 24,
   },
   modalContent: {
     backgroundColor: Colors.surface,
-    borderRadius: 20,
+    borderRadius: 24,
     padding: 24,
     width: '100%',
     maxWidth: 360,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: Colors.surfaceBorder,
+    shadowColor: Colors.surfaceShadow,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 1,
+    shadowRadius: 16,
+    elevation: 8,
   },
   iconCircle: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: Colors.warningGlow,
+    backgroundColor: Colors.orangeLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 20,
+    fontWeight: '800',
     color: Colors.textPrimary,
     marginBottom: 8,
   },
@@ -105,17 +110,15 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   errorLog: {
-    backgroundColor: Colors.background,
-    borderRadius: 8,
-    padding: 10,
+    backgroundColor: Colors.surfaceSubtle,
+    borderRadius: 12,
+    padding: 12,
     width: '100%',
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: Colors.surfaceBorder,
+    marginBottom: 18,
   },
   errorLogText: {
     fontSize: 11,
-    color: Colors.textMuted,
+    color: Colors.textSecondary,
     fontFamily: 'monospace',
   },
   primaryButton: {
@@ -123,11 +126,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: Colors.primary,
-    borderRadius: 12,
-    paddingVertical: 12,
+    backgroundColor: Colors.backgroundDark,
+    borderRadius: 16,
+    paddingVertical: 14,
     width: '100%',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   primaryButtonText: {
     fontSize: 14,
@@ -135,10 +138,11 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   cancelButton: {
-    paddingVertical: 10,
+    paddingVertical: 8,
   },
   cancelButtonText: {
     fontSize: 13,
     color: Colors.textSecondary,
+    fontWeight: '600',
   },
 });

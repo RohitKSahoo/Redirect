@@ -13,140 +13,211 @@ export const BankingPrepCard: React.FC<BankingPrepCardProps> = ({
   onOpenAccessibility,
 }) => {
   return (
-    <View style={styles.card}>
-      <View style={styles.headerRow}>
-        <View style={styles.badgeRow}>
-          <View style={styles.shieldIcon}>
-            <MaterialCommunityIcons name="shield-check" size={18} color={Colors.success} />
+    <View style={styles.cardContainer}>
+      {/* Frosted Glass Hero Card */}
+      <View style={styles.heroGlassCard}>
+        <View style={styles.contentLeft}>
+          <View style={styles.tagPill}>
+            <MaterialCommunityIcons name="shield-check" size={14} color={Colors.textSecondary} />
+            <Text style={styles.tagText}>SAFE BANKING MODE</Text>
           </View>
-          <Text style={styles.headerTitle}>Banking & Payment Prep</Text>
+
+          <Text style={styles.heroTitle}>Bypass UPI & Bank Checks</Text>
+          <Text style={styles.heroSubtitle}>
+            Disable Developer Options & Accessibility to use GPay & PhonePe.
+          </Text>
         </View>
-        <View style={styles.statusPill}>
-          <Text style={styles.statusText}>Quick 2-Step</Text>
+
+        {/* Right Glass Badge with Phone Lock icon and chevron */}
+        <View style={styles.graphicBadge}>
+          <MaterialCommunityIcons name="cellphone-lock" size={26} color={Colors.textPrimary} />
+          <MaterialCommunityIcons name="chevron-right" size={18} color={Colors.textMuted} />
         </View>
       </View>
 
-      <Text style={styles.description}>
-        Payment apps (Google Pay, PhonePe, Banks) block access if Developer Options or Accessibility tools are active.
-      </Text>
-
-      <View style={styles.buttonsRow}>
+      {/* Step 01 and Step 02 Frosted Glass Pills */}
+      <View style={styles.actionsRow}>
         <TouchableOpacity
-          style={[styles.actionButton, styles.devButton]}
+          style={styles.stepButton}
           onPress={onOpenDevOptions}
           activeOpacity={0.8}
         >
-          <MaterialCommunityIcons name="code-tags" size={16} color="#FFAB00" />
-          <View style={styles.buttonTextWrapper}>
-            <Text style={styles.buttonLabel}>Step 1</Text>
-            <Text style={styles.buttonAction}>Dev Options</Text>
+          <View style={styles.stepIconBox}>
+            <MaterialCommunityIcons name="code-tags" size={18} color={Colors.textPrimary} />
           </View>
-          <MaterialCommunityIcons name="arrow-top-right" size={14} color="#FFAB00" />
+          <View style={styles.stepTextContainer}>
+            <Text style={styles.stepNumber}>STEP 01</Text>
+            <Text style={styles.stepName}>Dev Options</Text>
+          </View>
+          <View style={styles.stepChevronCircle}>
+            <MaterialCommunityIcons name="chevron-right" size={14} color={Colors.textSecondary} />
+          </View>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.actionButton, styles.accessibilityButton]}
+          style={styles.stepButton}
           onPress={onOpenAccessibility}
           activeOpacity={0.8}
         >
-          <MaterialCommunityIcons name="human" size={16} color="#FF5252" />
-          <View style={styles.buttonTextWrapper}>
-            <Text style={styles.buttonLabel}>Step 2</Text>
-            <Text style={styles.buttonAction}>Accessibility</Text>
+          <View style={styles.stepIconBox}>
+            <MaterialCommunityIcons name="human" size={20} color={Colors.textPrimary} />
           </View>
-          <MaterialCommunityIcons name="arrow-top-right" size={14} color="#FF5252" />
+          <View style={styles.stepTextContainer}>
+            <Text style={styles.stepNumber}>STEP 02</Text>
+            <Text style={styles.stepName}>Accessibility</Text>
+          </View>
+          <View style={styles.stepChevronCircle}>
+            <MaterialCommunityIcons name="chevron-right" size={14} color={Colors.textSecondary} />
+          </View>
         </TouchableOpacity>
+      </View>
+
+      {/* 3-Dot Slider Indicator */}
+      <View style={styles.dotsRow}>
+        <View style={[styles.dot, styles.dotActive]} />
+        <View style={styles.dot} />
+        <View style={styles.dot} />
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#121829',
-    borderRadius: 20,
-    padding: 16,
-    marginHorizontal: 20,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#253355',
+  cardContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
   },
-  headerRow: {
+  heroGlassCard: {
+    backgroundColor: Colors.glassCard,
+    borderRadius: 28,
+    padding: 22,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    borderWidth: 1.5,
+    borderColor: Colors.glassBorder,
+    shadowColor: Colors.glassShadow,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 1,
+    shadowRadius: 18,
+    elevation: 4,
   },
-  badgeRow: {
+  contentLeft: {
+    flex: 1,
+    paddingRight: 10,
+  },
+  tagPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
+    backgroundColor: 'rgba(230, 235, 242, 0.7)',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 16,
+    marginBottom: 10,
   },
-  shieldIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    backgroundColor: Colors.successGlow,
+  tagText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: Colors.textSecondary,
+    letterSpacing: 0.5,
+  },
+  heroTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+    lineHeight: 22,
+    marginBottom: 4,
+  },
+  heroSubtitle: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    lineHeight: 16,
+    fontWeight: '500',
+  },
+  graphicBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
+    shadowColor: Colors.glassShadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 2,
+    gap: 4,
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 14,
+  },
+  stepButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.glassCard,
+    padding: 12,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: Colors.glassBorder,
+    shadowColor: Colors.glassShadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  stepIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  stepTextContainer: {
+    flex: 1,
+  },
+  stepNumber: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: Colors.textMuted,
+    letterSpacing: 0.5,
+  },
+  stepName: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  stepChevronCircle: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-  },
-  statusPill: {
-    backgroundColor: 'rgba(79, 117, 255, 0.15)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
-  },
-  statusText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: Colors.primaryLight,
-  },
-  description: {
-    fontSize: 12,
-    color: Colors.textSecondary,
-    lineHeight: 17,
-    marginBottom: 14,
-  },
-  buttonsRow: {
+  dotsRow: {
     flexDirection: 'row',
-    gap: 10,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    borderWidth: 1,
+    gap: 6,
+    marginTop: 14,
   },
-  devButton: {
-    backgroundColor: 'rgba(255, 171, 0, 0.08)',
-    borderColor: 'rgba(255, 171, 0, 0.25)',
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#CBD5E1',
   },
-  accessibilityButton: {
-    backgroundColor: 'rgba(255, 82, 82, 0.08)',
-    borderColor: 'rgba(255, 82, 82, 0.25)',
-  },
-  buttonTextWrapper: {
-    flex: 1,
-    marginHorizontal: 8,
-  },
-  buttonLabel: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: Colors.textMuted,
-    textTransform: 'uppercase',
-  },
-  buttonAction: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: Colors.textPrimary,
+  dotActive: {
+    width: 18,
+    backgroundColor: Colors.textPrimary,
   },
 });

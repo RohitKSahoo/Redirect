@@ -20,8 +20,8 @@ export const PinnedShortcuts: React.FC<PinnedShortcutsProps> = ({
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <MaterialCommunityIcons name="star" size={16} color={Colors.pinActive} />
         <Text style={styles.headerTitle}>Pinned Quick Access</Text>
+        <Text style={styles.countBadge}>{items.length} starred</Text>
       </View>
 
       <ScrollView
@@ -34,30 +34,37 @@ export const PinnedShortcuts: React.FC<PinnedShortcutsProps> = ({
             key={item.id}
             style={styles.card}
             onPress={() => onPressItem(item)}
-            activeOpacity={0.7}
+            activeOpacity={0.8}
           >
             <View style={styles.cardTop}>
-              <View style={[styles.iconWrapper, { backgroundColor: `${item.accentColor}22` }]}>
+              <View style={[styles.iconWrapper, { backgroundColor: `${item.accentColor}18` }]}>
                 <MaterialCommunityIcons
                   name={item.icon as any}
-                  size={20}
+                  size={22}
                   color={item.accentColor}
                 />
               </View>
+
               <TouchableOpacity
                 onPress={() => onUnpin(item.id)}
-                hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                style={styles.unpinCircle}
               >
-                <MaterialCommunityIcons name="close" size={16} color={Colors.textMuted} />
+                <MaterialCommunityIcons name="star" size={16} color={Colors.starActive} />
               </TouchableOpacity>
             </View>
 
             <Text style={styles.itemTitle} numberOfLines={1}>
               {item.title}
             </Text>
-            <Text style={styles.categoryBadge}>
-              {item.category.toUpperCase()}
+            <Text style={styles.categoryLabel} numberOfLines={1}>
+              {item.shortDescription}
             </Text>
+
+            <View style={styles.cardBottomRow}>
+              <Text style={styles.openText}>Tap to open</Text>
+              <MaterialCommunityIcons name="arrow-right" size={14} color={Colors.textSecondary} />
+            </View>
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -67,57 +74,87 @@ export const PinnedShortcuts: React.FC<PinnedShortcutsProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   header: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 20,
-    marginBottom: 10,
+    paddingHorizontal: 22,
+    marginBottom: 12,
   },
   headerTitle: {
-    fontSize: 13,
+    fontSize: 18,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+    letterSpacing: -0.3,
+  },
+  countBadge: {
+    fontSize: 12,
     fontWeight: '600',
-    color: Colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    color: Colors.textMuted,
   },
   scrollContainer: {
-    paddingHorizontal: 20,
-    gap: 10,
+    paddingHorizontal: 22,
+    gap: 14,
   },
   card: {
     backgroundColor: Colors.surface,
-    borderRadius: 14,
-    padding: 12,
-    width: 140,
+    borderRadius: 20,
+    padding: 16,
+    width: 170,
     borderWidth: 1,
     borderColor: Colors.surfaceBorder,
+    shadowColor: Colors.surfaceShadow,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 3,
   },
   cardTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 14,
   },
   iconWrapper: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  unpinCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#FFFBEB',
     alignItems: 'center',
     justifyContent: 'center',
   },
   itemTitle: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '700',
     color: Colors.textPrimary,
     marginBottom: 4,
   },
-  categoryBadge: {
-    fontSize: 9,
-    fontWeight: '700',
-    color: Colors.textMuted,
-    letterSpacing: 0.5,
+  categoryLabel: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    lineHeight: 14,
+    marginBottom: 12,
+  },
+  cardBottomRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: Colors.surfaceSubtle,
+    paddingTop: 8,
+  },
+  openText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: Colors.textSecondary,
   },
 });
