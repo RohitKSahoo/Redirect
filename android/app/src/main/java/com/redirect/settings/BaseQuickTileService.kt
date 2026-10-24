@@ -3,11 +3,6 @@ package com.redirect.settings
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.RectF
 import android.graphics.drawable.Icon
 import android.os.Build
 import android.service.quicksettings.Tile
@@ -99,12 +94,13 @@ abstract class BaseQuickTileService : TileService() {
                     tile.subtitle = "Tap to launch"
                 }
 
-                // Dynamically update tile icon to reflect the selected option
-                val tileBitmap = createTileIconBitmap(title)
-                tile.icon = Icon.createWithBitmap(tileBitmap)
+                // Show the selected option icon in the notification panel tile
+                val iconRes = getTileIconResource(json)
+                tile.icon = Icon.createWithResource(this, iconRes)
             } catch (e: Exception) {
                 tile.label = "Slot $slotIndex"
                 tile.state = Tile.STATE_INACTIVE
+                tile.icon = Icon.createWithResource(this, R.drawable.ic_quick_tile)
             }
         } else {
             tile.label = "Redirect Slot $slotIndex"
@@ -118,33 +114,60 @@ abstract class BaseQuickTileService : TileService() {
         tile.updateTile()
     }
 
-    private fun createTileIconBitmap(title: String): Bitmap {
-        val size = 96
-        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(bitmap)
+    private fun getTileIconResource(json: JSONObject): Int {
+        val icon = json.optString("icon", "").lowercase()
+        val id = json.optString("id", "").lowercase()
+        val action = json.optString("action", "").lowercase()
+        val title = json.optString("title", "").lowercase()
 
-        // Draw crisp icon frame
-        val framePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.WHITE
-            style = Paint.Style.STROKE
-            strokeWidth = 6f
+        return when {
+            // Developer Options
+            icon.contains("developer") || icon.contains("code") || id.contains("dev") || title.contains("developer") || action.contains("development") ->
+                R.drawable.ic_tile_developer
+
+            // Accessibility Services
+            icon.contains("human") || icon.contains("accessibility") || id.contains("accessibility") || title.contains("accessibility") ->
+                R.drawable.ic_tile_accessibility
+
+            // Wifi / Wireless Debugging
+            icon.contains("wifi") || id.contains("wireless") || title.contains("wireless") ->
+                R.drawable.ic_tile_wifi
+
+            // Display Over Other Apps (Overlay)
+            icon.contains("layers") || id.contains("overlay") || title.contains("overlay") || action.contains("overlay") ->
+                R.drawable.ic_tile_overlay
+
+            // Install Unknown Apps (Sideload / Package)
+            icon.contains("package") || id.contains("unknown") || title.contains("unknown") || action.contains("unknown") ->
+                R.drawable.ic_tile_package
+
+            // Notification Access
+            icon.contains("bell") || id.contains("notification") || title.contains("notification") || action.contains("notification") ->
+                R.drawable.ic_tile_notification
+
+            // Security & Biometrics
+            icon.contains("shield") || icon.contains("lock") || id.contains("security") || title.contains("security") || action.contains("security") ->
+                R.drawable.ic_tile_security
+
+            // Location Services
+            icon.contains("gps") || icon.contains("location") || icon.contains("crosshairs") || id.contains("location") || title.contains("location") || action.contains("location") ->
+                R.drawable.ic_tile_location
+
+            // Battery Optimization
+            icon.contains("battery") || id.contains("battery") || title.contains("battery") || action.contains("battery") ->
+                R.drawable.ic_tile_battery
+
+            // Manage All Applications
+            icon.contains("apps") || id.contains("all_apps") || title.contains("all app") || action.contains("manage_all_applications") ->
+                R.drawable.ic_tile_apps
+
+            // Default Apps
+            icon.contains("phone") || icon.contains("cellphone") || id.contains("default_apps") || title.contains("default") ->
+                R.drawable.ic_tile_phone_cog
+
+            // Default fallback settings gear icon
+            else -> R.drawable.ic_quick_tile
         }
-        val rect = RectF(6f, 6f, size - 6f, size - 6f)
-        canvas.drawRoundRect(rect, 20f, 20f, framePaint)
-
-        // Draw option first letter boldly in center
-        val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.WHITE
-            textSize = 48f
-            textAlign = Paint.Align.CENTER
-            isFakeBoldText = true
-        }
-
-        val firstLetter = title.firstOrNull()?.uppercaseChar()?.toString() ?: "S"
-        val yPos = (canvas.height / 2f) - ((textPaint.descent() + textPaint.ascent()) / 2f)
-        canvas.drawText(firstLetter, canvas.width / 2f, yPos, textPaint)
-
-        return bitmap
     }
 }
 
