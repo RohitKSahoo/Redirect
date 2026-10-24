@@ -53,10 +53,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
         {/* Top Header Bar */}
         <View style={styles.headerBar}>
-          <View style={styles.titleGroup}>
-            <Text style={styles.headerTitle}>Settings & Diagnostics</Text>
-            <Text style={styles.headerSubtitle}>Redirect System Framework • v1.0.0</Text>
-          </View>
+          <Text style={styles.headerTitle}>Settings</Text>
           <TouchableOpacity
             style={styles.closeBtn}
             onPress={onClose}
@@ -114,118 +111,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </View>
           </View>
 
-          {/* SECTION 2: APP PERMISSIONS */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeaderRow}>
-              <MaterialCommunityIcons name="shield-key-outline" size={16} color={Colors.textSecondary} />
-              <Text style={styles.sectionTitle}>APP PERMISSIONS & CAPABILITIES</Text>
-            </View>
-            <Text style={styles.sectionDescription}>
-              Overview of Android system capabilities active or utilized in Redirect:
-            </Text>
-
-            <View style={styles.card}>
-              {/* Permission 1 */}
-              <View style={styles.permItem}>
-                <View style={[styles.permIconBox, { backgroundColor: '#ECFDF5' }]}>
-                  <MaterialCommunityIcons name="view-dashboard-outline" size={18} color={Colors.emerald} />
-                </View>
-                <View style={styles.permContent}>
-                  <View style={styles.permTopRow}>
-                    <Text style={styles.permName}>Quick Settings Tile Service</Text>
-                    <View style={[styles.permBadge, { backgroundColor: '#ECFDF5' }]}>
-                      <Text style={[styles.permBadgeText, { color: '#047857' }]}>ACTIVE</Text>
-                    </View>
-                  </View>
-                  <Text style={styles.permDesc}>
-                    Controls 3 dynamic quick settings tiles in your notification pulldown shade with live icons.
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.divider} />
-
-              {/* Permission 2 */}
-              <View style={styles.permItem}>
-                <View style={[styles.permIconBox, { backgroundColor: '#EFF6FF' }]}>
-                  <MaterialCommunityIcons name="home-plus-outline" size={18} color="#2563EB" />
-                </View>
-                <View style={styles.permContent}>
-                  <View style={styles.permTopRow}>
-                    <Text style={styles.permName}>Home Screen Pinning</Text>
-                    <View style={[styles.permBadge, { backgroundColor: '#EFF6FF' }]}>
-                      <Text style={[styles.permBadgeText, { color: '#1D4ED8' }]}>SUPPORTED</Text>
-                    </View>
-                  </View>
-                  <Text style={styles.permDesc}>
-                    Pins 1-tap direct launcher shortcuts onto your phone&apos;s home screen.
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.divider} />
-
-              {/* Permission 3 */}
-              <View style={styles.permItem}>
-                <View style={[styles.permIconBox, { backgroundColor: '#FAF5FF' }]}>
-                  <MaterialCommunityIcons name="swap-horizontal-bold" size={18} color="#7C3AED" />
-                </View>
-                <View style={styles.permContent}>
-                  <View style={styles.permTopRow}>
-                    <Text style={styles.permName}>OEM Intent Trampoline</Text>
-                    <View style={[styles.permBadge, { backgroundColor: '#FAF5FF' }]}>
-                      <Text style={[styles.permBadgeText, { color: '#6D28D9' }]}>NATIVE</Text>
-                    </View>
-                  </View>
-                  <Text style={styles.permDesc}>
-                    Launches deep settings activities directly without crashes or redirect blocks.
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.divider} />
-
-              {/* Permission 4 */}
-              <View style={styles.permItem}>
-                <View style={[styles.permIconBox, { backgroundColor: '#FFFBEB' }]}>
-                  <MaterialCommunityIcons name="human" size={18} color="#D97706" />
-                </View>
-                <View style={styles.permContent}>
-                  <View style={styles.permTopRow}>
-                    <Text style={styles.permName}>Accessibility Framework</Text>
-                    <View style={[styles.permBadge, { backgroundColor: '#FFFBEB' }]}>
-                      <Text style={[styles.permBadgeText, { color: '#B45309' }]}>OPTIONAL</Text>
-                    </View>
-                  </View>
-                  <Text style={styles.permDesc}>
-                    Underlying engine registered for intelligent screen monitoring and automation.
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.divider} />
-
-              {/* Permission 5 */}
-              <View style={styles.permItem}>
-                <View style={[styles.permIconBox, { backgroundColor: '#F1F5F9' }]}>
-                  <MaterialCommunityIcons name="bell-badge-outline" size={18} color="#475569" />
-                </View>
-                <View style={styles.permContent}>
-                  <View style={styles.permTopRow}>
-                    <Text style={styles.permName}>Post Notifications</Text>
-                    <View style={[styles.permBadge, { backgroundColor: '#F1F5F9' }]}>
-                      <Text style={[styles.permBadgeText, { color: '#334155' }]}>STANDARD</Text>
-                    </View>
-                  </View>
-                  <Text style={styles.permDesc}>
-                    Allows notification panel alerts when widget states or tiles are synchronized.
-                  </Text>
-                </View>
-              </View>
-            </View>
-          </View>
-
-          {/* SECTION 3: COMING SOON FEATURES */}
+          {/* SECTION 2: COMING SOON FEATURES */}
           <View style={styles.section}>
             <View style={styles.sectionHeaderRow}>
               <MaterialCommunityIcons name="rocket-launch-outline" size={16} color={Colors.textSecondary} />
@@ -235,24 +121,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <View style={styles.card}>
               <View style={styles.upcomingItem}>
                 <View style={styles.upcomingIconBox}>
-                  <MaterialCommunityIcons name="radar" size={24} color={Colors.textPrimary} />
+                  <MaterialCommunityIcons name="radar" size={20} color={Colors.textPrimary} />
                 </View>
                 <View style={styles.upcomingContent}>
-                  <View style={styles.upcomingTopRow}>
-                    <Text style={styles.upcomingTitle}>Live Screen Detect</Text>
-                    <View style={styles.comingSoonBadge}>
-                      <Text style={styles.comingSoonBadgeText}>COMING SOON</Text>
-                    </View>
-                  </View>
-                  <Text style={styles.upcomingDesc}>
-                    Real-time screen detector that senses when banking, UPI, or enterprise apps trigger security warnings and provides an instant 1-tap floating redirect to toggle developer/root settings.
-                  </Text>
+                  <Text style={styles.upcomingTitle}>Live Screen Detect</Text>
+                </View>
+                <View style={styles.comingSoonBadge}>
+                  <Text style={styles.comingSoonBadgeText}>COMING SOON</Text>
                 </View>
               </View>
             </View>
           </View>
 
-          {/* SECTION 4: DEVELOPER & GITHUB PROFILE */}
+          {/* SECTION 3: DEVELOPER & GITHUB PROFILE */}
           <View style={styles.section}>
             <View style={styles.sectionHeaderRow}>
               <MaterialCommunityIcons name="code-tags" size={16} color={Colors.textSecondary} />
@@ -305,25 +186,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderBottomWidth: 1,
     borderBottomColor: Colors.glassBorder,
     backgroundColor: Colors.glassCard,
   },
-  titleGroup: {
-    flex: 1,
-  },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '900',
     color: Colors.textPrimary,
-    letterSpacing: -0.4,
-  },
-  headerSubtitle: {
-    fontSize: 11.5,
-    color: Colors.textSecondary,
-    fontWeight: '600',
-    marginTop: 1,
+    letterSpacing: -0.5,
   },
   closeBtn: {
     width: 32,
@@ -340,30 +212,23 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 16,
-    paddingTop: 14,
+    paddingTop: 16,
     paddingBottom: 40,
   },
   section: {
-    marginBottom: 18,
+    marginBottom: 20,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 6,
+    marginBottom: 8,
   },
   sectionTitle: {
     fontSize: 11,
     fontWeight: '800',
     color: Colors.textSecondary,
     letterSpacing: 0.8,
-  },
-  sectionDescription: {
-    fontSize: 11.5,
-    color: Colors.textSecondary,
-    marginBottom: 8,
-    lineHeight: 16,
-    fontWeight: '500',
   },
   card: {
     backgroundColor: Colors.glassCard,
@@ -412,58 +277,15 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     letterSpacing: 0.4,
   },
-  permItem: {
-    flexDirection: 'row',
-    paddingVertical: 6,
-    alignItems: 'flex-start',
-    gap: 10,
-  },
-  permIconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 3,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 2,
-  },
-  permContent: {
-    flex: 1,
-  },
-  permTopRow: {
+  upcomingItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 2,
-  },
-  permName: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: Colors.textPrimary,
-  },
-  permBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 1.5,
-    borderRadius: 2,
-  },
-  permBadgeText: {
-    fontSize: 8.5,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-  },
-  permDesc: {
-    fontSize: 11,
-    color: Colors.textSecondary,
-    lineHeight: 15,
-    fontWeight: '500',
-  },
-  upcomingItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
     gap: 12,
   },
   upcomingIconBox: {
-    width: 40,
-    height: 40,
+    width: 36,
+    height: 36,
     borderRadius: 4,
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     alignItems: 'center',
@@ -474,14 +296,8 @@ const styles = StyleSheet.create({
   upcomingContent: {
     flex: 1,
   },
-  upcomingTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
   upcomingTitle: {
-    fontSize: 14,
+    fontSize: 13.5,
     fontWeight: '800',
     color: Colors.textPrimary,
   },
@@ -498,12 +314,6 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: '#B45309',
     letterSpacing: 0.5,
-  },
-  upcomingDesc: {
-    fontSize: 11.5,
-    color: Colors.textSecondary,
-    lineHeight: 16,
-    fontWeight: '500',
   },
   githubCard: {
     flexDirection: 'row',
