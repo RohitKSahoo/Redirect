@@ -24,6 +24,7 @@ allprojects {
 apply plugin: "expo-root-project"
 apply plugin: "com.facebook.react.rootproject"
 
-// Pin to installed Android SDK 36 and Build-Tools 36.1.0
-rootProject.ext.compileSdkVersion = 36
-rootProject.ext.buildToolsVersion = "36.1.0"
+// Pin to installed Android SDK 37 and Build-Tools 37.0.0
+rootProject.ext.compileSdkVersion = 37
+rootProject.ext.buildToolsVersion = "37.0.0"
+
