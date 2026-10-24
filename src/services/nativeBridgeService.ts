@@ -83,6 +83,7 @@ export const NativeBridge = {
         ? JSON.stringify({
             id: item.id,
             title: item.title,
+            icon: item.icon,
             action: item.intent.action,
             packageName: item.intent.packageName || '',
             className: item.intent.className || '',
@@ -116,7 +117,7 @@ export const NativeBridge = {
             title: json.title,
             shortDescription: 'Quick Settings Tile',
             category: 'system',
-            icon: 'cog-outline',
+            icon: json.icon || 'view-dashboard-outline',
             accentColor: json.accentColor || '#3A86FF',
             intent: {
               action: json.action,

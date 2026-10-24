@@ -78,6 +78,22 @@ export const QuickTileAssignModal: React.FC<QuickTileAssignModalProps> = ({
           <Text style={styles.slotBadgeText}>TILE {slotNum}</Text>
         </View>
 
+        {/* Selected Option Icon Box */}
+        <View
+          style={[
+            styles.slotIconBox,
+            item
+              ? { backgroundColor: `${item.accentColor || '#3A86FF'}18`, borderColor: `${item.accentColor || '#3A86FF'}40` }
+              : styles.emptySlotIconBox,
+          ]}
+        >
+          <MaterialCommunityIcons
+            name={(item ? item.icon : 'plus') as any}
+            size={18}
+            color={item ? (item.accentColor || Colors.textPrimary) : Colors.textMuted}
+          />
+        </View>
+
         <View style={styles.slotInfo}>
           <Text style={styles.slotTitle} numberOfLines={1}>
             {item ? item.title : 'Empty Slot'}
@@ -131,6 +147,11 @@ export const QuickTileAssignModal: React.FC<QuickTileAssignModalProps> = ({
         <View style={styles.popupCard}>
           {/* Header */}
           <View style={styles.headerRow}>
+            {targetItem && (
+              <View style={[styles.headerIconBox, { backgroundColor: `${targetItem.accentColor}18` }]}>
+                <MaterialCommunityIcons name={targetItem.icon as any} size={22} color={targetItem.accentColor} />
+              </View>
+            )}
             <View style={{ flex: 1 }}>
               <Text style={styles.modalTitle}>Quick Settings Tiles</Text>
               <Text style={styles.modalSubtitle}>
@@ -196,6 +217,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 14,
+    gap: 10,
+  },
+  headerIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
   },
   modalTitle: {
     fontSize: 18,
@@ -232,16 +263,31 @@ const styles = StyleSheet.create({
   },
   slotBadge: {
     backgroundColor: Colors.textPrimary,
-    paddingHorizontal: 7,
+    paddingHorizontal: 6,
     paddingVertical: 4,
     borderRadius: 2,
-    marginRight: 10,
+    marginRight: 8,
   },
   slotBadgeText: {
-    fontSize: 9,
+    fontSize: 8.5,
     fontWeight: '800',
     color: '#FFFFFF',
     letterSpacing: 0.5,
+  },
+  slotIconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+    borderWidth: 1,
+  },
+  emptySlotIconBox: {
+    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+    borderStyle: 'dashed',
   },
   slotInfo: {
     flex: 1,

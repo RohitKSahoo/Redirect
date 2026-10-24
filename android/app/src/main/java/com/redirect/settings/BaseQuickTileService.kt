@@ -3,6 +3,12 @@ package com.redirect.settings
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.RectF
+import android.graphics.drawable.Icon
 import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
@@ -92,6 +98,10 @@ abstract class BaseQuickTileService : TileService() {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     tile.subtitle = "Tap to launch"
                 }
+
+                // Dynamically update tile icon to reflect the selected option
+                val tileBitmap = createTileIconBitmap(title)
+                tile.icon = Icon.createWithBitmap(tileBitmap)
             } catch (e: Exception) {
                 tile.label = "Slot $slotIndex"
                 tile.state = Tile.STATE_INACTIVE
@@ -102,8 +112,39 @@ abstract class BaseQuickTileService : TileService() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 tile.subtitle = "Tap to assign"
             }
+            tile.icon = Icon.createWithResource(this, R.drawable.ic_quick_tile)
         }
 
         tile.updateTile()
     }
+
+    private fun createTileIconBitmap(title: String): Bitmap {
+        val size = 96
+        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+
+        // Draw crisp icon frame
+        val framePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.WHITE
+            style = Paint.Style.STROKE
+            strokeWidth = 6f
+        }
+        val rect = RectF(6f, 6f, size - 6f, size - 6f)
+        canvas.drawRoundRect(rect, 20f, 20f, framePaint)
+
+        // Draw option first letter boldly in center
+        val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.WHITE
+            textSize = 48f
+            textAlign = Paint.Align.CENTER
+            isFakeBoldText = true
+        }
+
+        val firstLetter = title.firstOrNull()?.uppercaseChar()?.toString() ?: "S"
+        val yPos = (canvas.height / 2f) - ((textPaint.descent() + textPaint.ascent()) / 2f)
+        canvas.drawText(firstLetter, canvas.width / 2f, yPos, textPaint)
+
+        return bitmap
+    }
 }
+

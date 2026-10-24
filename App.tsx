@@ -44,7 +44,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<SettingCategory>('all');
   const [pinnedIds, setPinnedIds] = useState<string[]>(['dev_options', 'accessibility_settings']);
-  const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   const [customSettings, setCustomSettings] = useState<SettingItem[]>([]);
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [filterDropdownVisible, setFilterDropdownVisible] = useState(false);
@@ -149,7 +149,7 @@ export default function App() {
 
   const handleToggleCategory = useCallback(async (key: string) => {
     await triggerHaptic();
-    setCollapsedCategories(prev => ({
+    setExpandedCategories(prev => ({
       ...prev,
       [key]: !prev[key],
     }));
@@ -187,7 +187,7 @@ export default function App() {
     return allAvailableSettings.filter(item => pinnedIds.includes(item.id));
   }, [allAvailableSettings, pinnedIds]);
 
-  // Grouped categories for collapsible accordions
+  // Grouped categories for collapsible accordions (collapsed by default)
   const groupedCategories = useMemo(() => {
     const isSearching = searchQuery.trim().length > 0;
     return CATEGORY_CONFIG.map(cat => {
@@ -200,10 +200,10 @@ export default function App() {
         ...cat,
         items,
         count: items.length,
-        isCollapsed: isSearching ? false : !!collapsedCategories[cat.key],
+        isCollapsed: isSearching ? false : !expandedCategories[cat.key],
       };
     }).filter(cat => cat.count > 0);
-  }, [filteredSettings, searchQuery, collapsedCategories]);
+  }, [filteredSettings, searchQuery, expandedCategories]);
 
   return (
     <View style={[styles.mainContainer, { paddingTop: topInset }]}>
