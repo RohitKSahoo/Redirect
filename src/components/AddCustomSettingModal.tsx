@@ -93,6 +93,48 @@ function getColorForCategory(category: SettingCategory): string {
   }
 }
 
+// Pre-compiled static catalog outside the component to eliminate mount latency
+const STATIC_CATALOG: CatalogEntry[] = (() => {
+  const list: CatalogEntry[] = [];
+  const seenActions = new Set<string>();
+
+  PRESET_LIBRARY.forEach((p, idx) => {
+    seenActions.add(p.intent.action);
+    list.push({
+      id: `preset_${idx}`,
+      title: p.title,
+      shortDescription: p.shortDescription,
+      category: p.category,
+      icon: p.icon,
+      accentColor: p.accentColor,
+      action: p.intent.action,
+      keywords: p.keywords,
+      isPreset: true,
+    });
+  });
+
+  INTENT_DICTIONARY.forEach((d, idx) => {
+    if (!seenActions.has(d.action)) {
+      seenActions.add(d.action);
+      list.push({
+        id: `dict_${idx}`,
+        title: d.title,
+        shortDescription: d.shortDescription,
+        category: d.category,
+        icon: getIconForIntent(d.action, d.title, d.category),
+        accentColor: getColorForCategory(d.category),
+        action: d.action,
+        packageName: d.packageName,
+        className: d.className,
+        keywords: d.keywords,
+        isPreset: false,
+      });
+    }
+  });
+
+  return list;
+})();
+
 export const AddCustomSettingModal: React.FC<AddCustomSettingModalProps> = ({
   visible,
   onClose,
@@ -100,12 +142,15 @@ export const AddCustomSettingModal: React.FC<AddCustomSettingModalProps> = ({
 }) => {
   const topInset = Platform.OS === 'android' ? (RNStatusBar.currentHeight || 28) + 8 : 44;
 
+  // Mode: 'catalog' shows search and presets; 'raw' shows only raw intent customizer
+  const [viewMode, setViewMode] = useState<'catalog' | 'raw'>('catalog');
+
   // Search & Catalog Filter State
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilterCategory, setSelectedFilterCategory] = useState<SettingCategory>('all');
+  const [showAllPresets, setShowAllPresets] = useState(false);
 
-  // "Enter Raw Intent" Expander State
-  const [isRawExpanded, setIsRawExpanded] = useState(false);
+  // Raw Intent Form State
   const [customTitle, setCustomTitle] = useState('');
   const [customDescription, setCustomDescription] = useState('');
   const [customAction, setCustomAction] = useState('android.settings.SETTINGS');
@@ -125,54 +170,10 @@ export const AddCustomSettingModal: React.FC<AddCustomSettingModalProps> = ({
     }
   }, []);
 
-  // Build unified catalog of presets and known system intents
-  const catalog: CatalogEntry[] = useMemo(() => {
-    const list: CatalogEntry[] = [];
-    const seenActions = new Set<string>();
-
-    // 1. Presets from library (highest priority, rich metadata)
-    PRESET_LIBRARY.forEach((p, idx) => {
-      seenActions.add(p.intent.action);
-      list.push({
-        id: `preset_${idx}`,
-        title: p.title,
-        shortDescription: p.shortDescription,
-        category: p.category,
-        icon: p.icon,
-        accentColor: p.accentColor,
-        action: p.intent.action,
-        keywords: p.keywords,
-        isPreset: true,
-      });
-    });
-
-    // 2. Intents from dictionary
-    INTENT_DICTIONARY.forEach((d, idx) => {
-      if (!seenActions.has(d.action)) {
-        seenActions.add(d.action);
-        list.push({
-          id: `dict_${idx}`,
-          title: d.title,
-          shortDescription: d.shortDescription,
-          category: d.category,
-          icon: getIconForIntent(d.action, d.title, d.category),
-          accentColor: getColorForCategory(d.category),
-          action: d.action,
-          packageName: d.packageName,
-          className: d.className,
-          keywords: d.keywords,
-          isPreset: false,
-        });
-      }
-    });
-
-    return list;
-  }, []);
-
   // Filtered catalog based on query and category chip
   const filteredCatalog = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    return catalog.filter(item => {
+    return STATIC_CATALOG.filter(item => {
       if (selectedFilterCategory !== 'all' && item.category !== selectedFilterCategory) {
         return false;
       }
@@ -183,7 +184,16 @@ export const AddCustomSettingModal: React.FC<AddCustomSettingModalProps> = ({
       const matchKeywords = item.keywords.some(k => k.toLowerCase().includes(q));
       return matchTitle || matchDesc || matchAction || matchKeywords;
     });
-  }, [catalog, searchQuery, selectedFilterCategory]);
+  }, [searchQuery, selectedFilterCategory]);
+
+  // Performance optimization: display initial 7 items unless searching, filtering, or "Show More" is clicked
+  const displayedCatalog = useMemo(() => {
+    const isFiltered = searchQuery.trim().length > 0 || selectedFilterCategory !== 'all';
+    if (isFiltered || showAllPresets) {
+      return filteredCatalog;
+    }
+    return filteredCatalog.slice(0, 7);
+  }, [filteredCatalog, searchQuery, selectedFilterCategory, showAllPresets]);
 
   const handleTestIntent = async (action: string, pkg?: string, cls?: string) => {
     if (!action.trim() && !pkg?.trim()) {
@@ -239,10 +249,10 @@ export const AddCustomSettingModal: React.FC<AddCustomSettingModalProps> = ({
     setCustomClass(entry.className || '');
     setCustomCategory(entry.category);
     setCustomAccentColor(entry.accentColor);
-    setIsRawExpanded(true);
     if (entry.packageName || entry.className) {
       setShowAdvancedFields(true);
     }
+    setViewMode('raw');
   };
 
   const handleSaveCustom = async () => {
@@ -278,14 +288,14 @@ export const AddCustomSettingModal: React.FC<AddCustomSettingModalProps> = ({
     setCustomAction('android.settings.SETTINGS');
     setCustomPackage('');
     setCustomClass('');
-    setIsRawExpanded(false);
+    setViewMode('catalog');
     onClose();
   };
 
   return (
     <Modal
       visible={visible}
-      animationType="slide"
+      animationType="fade"
       transparent={false}
       onRequestClose={onClose}
       statusBarTranslucent
@@ -298,15 +308,27 @@ export const AddCustomSettingModal: React.FC<AddCustomSettingModalProps> = ({
         <View style={styles.headerBar}>
           <TouchableOpacity
             style={styles.backButton}
-            onPress={onClose}
+            onPress={() => {
+              if (viewMode === 'raw') {
+                setViewMode('catalog');
+              } else {
+                onClose();
+              }
+            }}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             activeOpacity={0.7}
           >
             <MaterialCommunityIcons name="arrow-left" size={22} color={Colors.textPrimary} />
           </TouchableOpacity>
           <View style={styles.headerTitleBox}>
-            <Text style={styles.headerTitle}>Add Shortcut</Text>
-            <Text style={styles.headerSubtitle}>Preset catalog & custom Android intents</Text>
+            <Text style={styles.headerTitle}>
+              {viewMode === 'raw' ? 'Custom Raw Intent' : 'Add Shortcut'}
+            </Text>
+            <Text style={styles.headerSubtitle}>
+              {viewMode === 'raw'
+                ? 'Configure Android action & component activity'
+                : 'Search system presets or craft custom intents'}
+            </Text>
           </View>
         </View>
 
@@ -320,169 +342,211 @@ export const AddCustomSettingModal: React.FC<AddCustomSettingModalProps> = ({
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            {/* 1. SEARCH CATALOG AT THE TOP */}
-            <View style={styles.searchContainer}>
-              <MaterialCommunityIcons name="magnify" size={20} color={Colors.textSecondary} style={styles.searchIcon} />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Search presets or intents (e.g. DNS, NFC, 5G)..."
-                placeholderTextColor={Colors.textMuted}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                autoCapitalize="none"
-              />
-              {searchQuery.length > 0 && (
-                <TouchableOpacity
-                  onPress={() => setSearchQuery('')}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                  <MaterialCommunityIcons name="close-circle" size={18} color={Colors.textMuted} />
-                </TouchableOpacity>
-              )}
-            </View>
-
-            {/* Category Filter Pills */}
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.filterPillsRow}
-            >
-              {CATEGORIES.map(cat => {
-                const isActive = selectedFilterCategory === cat.id;
-                return (
-                  <TouchableOpacity
-                    key={cat.id}
-                    style={[styles.filterPill, isActive && styles.filterPillActive]}
-                    onPress={() => setSelectedFilterCategory(cat.id)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={[styles.filterPillText, isActive && styles.filterPillTextActive]}>
-                      {cat.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-
-            {/* 2. CATALOG / PRESETS LIST */}
-            <View style={styles.sectionHeaderRow}>
-              <MaterialCommunityIcons name="view-grid-plus-outline" size={15} color={Colors.textSecondary} />
-              <Text style={styles.sectionTitle}>PRESET & SYSTEM CATALOG</Text>
-              <View style={styles.countBadge}>
-                <Text style={styles.countBadgeText}>{filteredCatalog.length}</Text>
-              </View>
-            </View>
-
-            {filteredCatalog.length === 0 ? (
-              <View style={styles.emptyCard}>
-                <MaterialCommunityIcons name="text-search" size={32} color={Colors.textMuted} />
-                <Text style={styles.emptyTitle}>No matching preset found</Text>
-                <Text style={styles.emptySubtitle}>
-                  No preset matches &ldquo;{searchQuery}&rdquo;. You can create a custom intent directly below:
-                </Text>
-                <TouchableOpacity
-                  style={styles.emptyActionBtn}
-                  onPress={() => {
-                    setCustomTitle(searchQuery);
-                    setIsRawExpanded(true);
-                  }}
-                  activeOpacity={0.8}
-                >
-                  <MaterialCommunityIcons name="plus" size={16} color="#FFFFFF" />
-                  <Text style={styles.emptyActionBtnText}>Create &ldquo;{searchQuery}&rdquo; Intent</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <View style={styles.catalogGrid}>
-                {filteredCatalog.map(item => (
-                  <View key={item.id} style={styles.catalogCard}>
+            {/* VIEW MODE 1: CATALOG VIEW */}
+            {viewMode === 'catalog' && (
+              <>
+                {/* 1. SEARCH CATALOG */}
+                <View style={styles.searchContainer}>
+                  <MaterialCommunityIcons name="magnify" size={20} color={Colors.textSecondary} style={styles.searchIcon} />
+                  <TextInput
+                    style={styles.searchInput}
+                    placeholder="Search presets or intents (e.g. DNS, NFC, 5G)..."
+                    placeholderTextColor={Colors.textMuted}
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    autoCapitalize="none"
+                  />
+                  {searchQuery.length > 0 && (
                     <TouchableOpacity
-                      style={styles.catalogMainTouch}
-                      onPress={() => handleLoadIntoCustomizer(item)}
-                      activeOpacity={0.7}
+                      onPress={() => setSearchQuery('')}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     >
-                      <View style={[styles.catalogIconBox, { backgroundColor: `${item.accentColor}16` }]}>
-                        <MaterialCommunityIcons name={item.icon as any} size={20} color={item.accentColor} />
-                      </View>
-
-                      <View style={styles.catalogTextBox}>
-                        <View style={styles.catalogTitleRow}>
-                          <Text style={styles.catalogTitle} numberOfLines={1}>
-                            {item.title}
-                          </Text>
-                          {item.isPreset && (
-                            <View style={styles.presetTag}>
-                              <Text style={styles.presetTagText}>PRESET</Text>
-                            </View>
-                          )}
-                        </View>
-                        <Text style={styles.catalogDesc} numberOfLines={1}>
-                          {item.shortDescription}
-                        </Text>
-                        <Text style={styles.catalogAction} numberOfLines={1}>
-                          {item.action}
-                        </Text>
-                      </View>
+                      <MaterialCommunityIcons name="close-circle" size={18} color={Colors.textMuted} />
                     </TouchableOpacity>
-
-                    {/* Quick Action Buttons */}
-                    <View style={styles.catalogActionRow}>
-                      <TouchableOpacity
-                        style={styles.testBtn}
-                        onPress={() => handleTestIntent(item.action, item.packageName, item.className)}
-                        activeOpacity={0.7}
-                      >
-                        <MaterialCommunityIcons name="play" size={13} color={Colors.emerald} />
-                        <Text style={styles.testBtnText}>Test</Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={styles.addBtn}
-                        onPress={() => handleQuickAddEntry(item)}
-                        activeOpacity={0.8}
-                      >
-                        <MaterialCommunityIcons name="plus" size={15} color="#FFFFFF" />
-                        <Text style={styles.addBtnText}>Add</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                ))}
-              </View>
-            )}
-
-            {/* 3. "ENTER RAW INTENT" EXPANDER (POWER USERS) */}
-            <View style={styles.expanderContainer}>
-              <TouchableOpacity
-                style={styles.expanderHeader}
-                onPress={() => setIsRawExpanded(prev => !prev)}
-                activeOpacity={0.8}
-              >
-                <View style={styles.expanderHeaderLeft}>
-                  <View style={styles.expanderIconBox}>
-                    <MaterialCommunityIcons name="code-tags" size={18} color="#FF8A00" />
-                  </View>
-                  <View>
-                    <View style={styles.expanderTitleRow}>
-                      <Text style={styles.expanderTitle}>Enter Raw Intent</Text>
-                      <View style={styles.powerUserBadge}>
-                        <Text style={styles.powerUserBadgeText}>POWER USER</Text>
-                      </View>
-                    </View>
-                    <Text style={styles.expanderSubtitle}>
-                      Configure custom Android action, package, class or extras
-                    </Text>
-                  </View>
+                  )}
                 </View>
 
-                <MaterialCommunityIcons
-                  name={isRawExpanded ? 'chevron-up' : 'chevron-down'}
-                  size={22}
-                  color={Colors.textSecondary}
-                />
-              </TouchableOpacity>
+                {/* Category Filter Pills */}
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.filterPillsRow}
+                >
+                  {CATEGORIES.map(cat => {
+                    const isActive = selectedFilterCategory === cat.id;
+                    return (
+                      <TouchableOpacity
+                        key={cat.id}
+                        style={[styles.filterPill, isActive && styles.filterPillActive]}
+                        onPress={() => setSelectedFilterCategory(cat.id)}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={[styles.filterPillText, isActive && styles.filterPillTextActive]}>
+                          {cat.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
 
-              {isRawExpanded && (
-                <View style={styles.expanderBody}>
+                {/* 2. SECTION HEADER WITH RAW INTENT BUTTON ON RIGHT */}
+                <View style={styles.catalogSectionHeaderRow}>
+                  <View style={styles.headerLeftGroup}>
+                    <MaterialCommunityIcons name="view-grid-plus-outline" size={15} color={Colors.textSecondary} />
+                    <Text style={styles.sectionTitle}>SYSTEM CATALOG</Text>
+                    <View style={styles.countBadge}>
+                      <Text style={styles.countBadgeText}>{filteredCatalog.length}</Text>
+                    </View>
+                  </View>
+
+                  {/* Power User Raw Intent Switcher Button on the right */}
+                  <TouchableOpacity
+                    style={styles.rawIntentHeaderTrigger}
+                    onPress={() => {
+                      triggerHaptic();
+                      setViewMode('raw');
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <MaterialCommunityIcons name="code-tags" size={14} color="#FF8A00" />
+                    <Text style={styles.rawIntentHeaderTriggerText}>Raw Intent</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Empty State */}
+                {filteredCatalog.length === 0 ? (
+                  <View style={styles.emptyCard}>
+                    <MaterialCommunityIcons name="text-search" size={32} color={Colors.textMuted} />
+                    <Text style={styles.emptyTitle}>No matching preset found</Text>
+                    <Text style={styles.emptySubtitle}>
+                      No preset matches &ldquo;{searchQuery}&rdquo;. You can craft a custom intent directly:
+                    </Text>
+                    <TouchableOpacity
+                      style={styles.emptyActionBtn}
+                      onPress={() => {
+                        setCustomTitle(searchQuery);
+                        setViewMode('raw');
+                      }}
+                      activeOpacity={0.8}
+                    >
+                      <MaterialCommunityIcons name="code-tags" size={16} color="#FFFFFF" />
+                      <Text style={styles.emptyActionBtnText}>Create &ldquo;{searchQuery}&rdquo; Intent</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <>
+                    <View style={styles.catalogGrid}>
+                      {displayedCatalog.map(item => (
+                        <View key={item.id} style={styles.catalogCard}>
+                          <TouchableOpacity
+                            style={styles.catalogMainTouch}
+                            onPress={() => handleLoadIntoCustomizer(item)}
+                            activeOpacity={0.7}
+                          >
+                            <View style={[styles.catalogIconBox, { backgroundColor: `${item.accentColor}16` }]}>
+                              <MaterialCommunityIcons name={item.icon as any} size={20} color={item.accentColor} />
+                            </View>
+
+                            <View style={styles.catalogTextBox}>
+                              <View style={styles.catalogTitleRow}>
+                                <Text style={styles.catalogTitle} numberOfLines={1}>
+                                  {item.title}
+                                </Text>
+                                {item.isPreset && (
+                                  <View style={styles.presetTag}>
+                                    <Text style={styles.presetTagText}>PRESET</Text>
+                                  </View>
+                                )}
+                              </View>
+                              <Text style={styles.catalogDesc} numberOfLines={1}>
+                                {item.shortDescription}
+                              </Text>
+                              <Text style={styles.catalogAction} numberOfLines={1}>
+                                {item.action}
+                              </Text>
+                            </View>
+                          </TouchableOpacity>
+
+                          {/* Quick Action Buttons */}
+                          <View style={styles.catalogActionRow}>
+                            <TouchableOpacity
+                              style={styles.testBtn}
+                              onPress={() => handleTestIntent(item.action, item.packageName, item.className)}
+                              activeOpacity={0.7}
+                            >
+                              <MaterialCommunityIcons name="play" size={13} color={Colors.emerald} />
+                              <Text style={styles.testBtnText}>Test</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                              style={styles.addBtn}
+                              onPress={() => handleQuickAddEntry(item)}
+                              activeOpacity={0.8}
+                            >
+                              <MaterialCommunityIcons name="plus" size={15} color="#FFFFFF" />
+                              <Text style={styles.addBtnText}>Add</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+
+                    {/* Show More Presets Button (when initial 7 is active) */}
+                    {!showAllPresets &&
+                      filteredCatalog.length > 7 &&
+                      searchQuery.trim().length === 0 &&
+                      selectedFilterCategory === 'all' && (
+                        <TouchableOpacity
+                          style={styles.showMoreButton}
+                          onPress={() => {
+                            triggerHaptic();
+                            setShowAllPresets(true);
+                          }}
+                          activeOpacity={0.8}
+                        >
+                          <Text style={styles.showMoreButtonText}>
+                            Show {filteredCatalog.length - 7} More System Presets
+                          </Text>
+                          <MaterialCommunityIcons name="chevron-down" size={18} color={Colors.textSecondary} />
+                        </TouchableOpacity>
+                      )}
+                  </>
+                )}
+              </>
+            )}
+
+            {/* VIEW MODE 2: RAW INTENT FOR POWER USERS (PRESETS HIDDEN) */}
+            {viewMode === 'raw' && (
+              <View style={styles.rawFormCard}>
+                <View style={styles.rawFormHeader}>
+                  <View style={styles.rawFormHeaderLeft}>
+                    <View style={styles.rawFormIconBox}>
+                      <MaterialCommunityIcons name="code-tags" size={18} color="#FF8A00" />
+                    </View>
+                    <View>
+                      <View style={styles.rawFormTitleRow}>
+                        <Text style={styles.rawFormTitle}>Enter Raw Intent</Text>
+                        <View style={styles.powerUserBadge}>
+                          <Text style={styles.powerUserBadgeText}>POWER USER</Text>
+                        </View>
+                      </View>
+                      <Text style={styles.rawFormSubtitle}>
+                        Direct Android action, package, class or component activity
+                      </Text>
+                    </View>
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.backToPresetsBtn}
+                    onPress={() => setViewMode('catalog')}
+                    activeOpacity={0.8}
+                  >
+                    <MaterialCommunityIcons name="format-list-bulleted" size={14} color={Colors.textSecondary} />
+                    <Text style={styles.backToPresetsText}>Presets</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.rawFormBody}>
                   {/* Shortcut Name */}
                   <Text style={styles.formLabel}>Shortcut Title *</Text>
                   <TextInput
@@ -638,8 +702,8 @@ export const AddCustomSettingModal: React.FC<AddCustomSettingModalProps> = ({
                     </TouchableOpacity>
                   </View>
                 </View>
-              )}
-            </View>
+              </View>
+            )}
           </ScrollView>
         </KeyboardAvoidingView>
       </View>
@@ -759,11 +823,16 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  // Section Header
-  sectionHeaderRow: {
+  // Section Header with Raw Intent Trigger
+  catalogSectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  headerLeftGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 6,
   },
   sectionTitle: {
@@ -782,6 +851,22 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '800',
     color: Colors.textPrimary,
+  },
+  rawIntentHeaderTrigger: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 138, 0, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 138, 0, 0.25)',
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 3,
+    gap: 4,
+  },
+  rawIntentHeaderTriggerText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#D97706',
   },
 
   // Empty State
@@ -826,7 +911,7 @@ const styles = StyleSheet.create({
   // Catalog Cards
   catalogGrid: {
     gap: 8,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   catalogCard: {
     backgroundColor: '#FFFFFF',
@@ -930,8 +1015,27 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
 
-  // Expander for Raw Intent
-  expanderContainer: {
+  // Show More Button
+  showMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+    borderRadius: 4,
+    paddingVertical: 10,
+    marginBottom: 16,
+    gap: 6,
+  },
+  showMoreButtonText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+  },
+
+  // Dedicated Raw Intent Form Card
+  rawFormCard: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: 'rgba(0, 0, 0, 0.08)',
@@ -944,20 +1048,22 @@ const styles = StyleSheet.create({
     elevation: 2,
     marginBottom: 20,
   },
-  expanderHeader: {
+  rawFormHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 14,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0, 0, 0, 0.05)',
   },
-  expanderHeaderLeft: {
+  rawFormHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
     gap: 10,
   },
-  expanderIconBox: {
+  rawFormIconBox: {
     width: 36,
     height: 36,
     borderRadius: 4,
@@ -965,12 +1071,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  expanderTitleRow: {
+  rawFormTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
-  expanderTitle: {
+  rawFormTitle: {
     fontSize: 14,
     fontWeight: '800',
     color: Colors.textPrimary,
@@ -986,15 +1092,29 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#FF8A00',
   },
-  expanderSubtitle: {
+  rawFormSubtitle: {
     fontSize: 11,
     color: Colors.textSecondary,
     marginTop: 2,
   },
-  expanderBody: {
+  backToPresetsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 3,
+    gap: 4,
+  },
+  backToPresetsText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+  },
+  rawFormBody: {
     padding: 14,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0, 0, 0, 0.05)',
     backgroundColor: '#FAFAFB',
   },
 
