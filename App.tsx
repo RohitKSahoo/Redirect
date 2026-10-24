@@ -218,10 +218,6 @@ export default function App() {
         deviceContext={deviceContext}
         onOpenDiagnostics={() => setSettingsVisible(true)}
         onOpenAddModal={() => setAddModalVisible(true)}
-        onOpenTilesModal={() => {
-          setQuickTileTargetItem(null);
-          setQuickTileModalVisible(true);
-        }}
       />
 
       {/* Search Bar with Category Filter Tune Button */}

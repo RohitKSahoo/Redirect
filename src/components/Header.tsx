@@ -8,14 +8,12 @@ interface HeaderProps {
   deviceContext: DeviceContext;
   onOpenDiagnostics: () => void;
   onOpenAddModal: () => void;
-  onOpenTilesModal?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   deviceContext,
   onOpenDiagnostics,
   onOpenAddModal,
-  onOpenTilesModal,
 }) => {
   return (
     <View style={styles.container}>
@@ -35,16 +33,6 @@ export const Header: React.FC<HeaderProps> = ({
             <MaterialCommunityIcons name="plus" size={16} color={Colors.textPrimary} />
             <Text style={styles.sharpPillText}>Add</Text>
           </TouchableOpacity>
-
-          {onOpenTilesModal && (
-            <TouchableOpacity
-              style={styles.sharpIconButton}
-              onPress={onOpenTilesModal}
-              activeOpacity={0.8}
-            >
-              <MaterialCommunityIcons name="view-dashboard-outline" size={19} color={Colors.textPrimary} />
-            </TouchableOpacity>
-          )}
 
           <TouchableOpacity
             style={styles.sharpIconButton}
