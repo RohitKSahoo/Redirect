@@ -21,7 +21,7 @@ import { FilterDropdown } from './src/components/FilterDropdown';
 import { StarredCarousel } from './src/components/StarredCarousel';
 import { CollapsibleCategorySection } from './src/components/CollapsibleCategorySection';
 import { SettingActionCard } from './src/components/SettingActionCard';
-import { DiagnosticsModal } from './src/components/DiagnosticsModal';
+import { SettingsModal } from './src/components/SettingsModal';
 import { IntentErrorModal } from './src/components/IntentErrorModal';
 import { AddCustomSettingModal } from './src/components/AddCustomSettingModal';
 import { QuickTileAssignModal } from './src/components/QuickTileAssignModal';
@@ -49,7 +49,7 @@ export default function App() {
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [filterDropdownVisible, setFilterDropdownVisible] = useState(false);
   const [filterAnchor, setFilterAnchor] = useState<{ x: number; y: number; width: number; height: number } | undefined>();
-  const [diagnosticsVisible, setDiagnosticsVisible] = useState(false);
+  const [settingsVisible, setSettingsVisible] = useState(false);
   const [errorModalVisible, setErrorModalVisible] = useState(false);
   const [errorModalTarget, setErrorModalTarget] = useState<{ title: string; message?: string }>({
     title: '',
@@ -216,7 +216,7 @@ export default function App() {
       {/* Header */}
       <Header
         deviceContext={deviceContext}
-        onOpenDiagnostics={() => setDiagnosticsVisible(true)}
+        onOpenDiagnostics={() => setSettingsVisible(true)}
         onOpenAddModal={() => setAddModalVisible(true)}
         onOpenTilesModal={() => {
           setQuickTileTargetItem(null);
@@ -319,9 +319,9 @@ export default function App() {
         existingIds={allAvailableSettings.map(s => s.id)}
       />
 
-      <DiagnosticsModal
-        visible={diagnosticsVisible}
-        onClose={() => setDiagnosticsVisible(false)}
+      <SettingsModal
+        visible={settingsVisible}
+        onClose={() => setSettingsVisible(false)}
         deviceContext={deviceContext}
       />
 

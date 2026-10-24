@@ -21,7 +21,6 @@ import { SettingCategory, SettingItem } from '../types';
 import { PRESET_LIBRARY } from '../data/presetLibrary';
 import { searchIntentDictionary, IntentSuggestion } from '../data/intentDictionary';
 import { launchSettingsIntent } from '../services/intentService';
-import { ScreenDetector, CapturedScreen } from '../services/screenDetectorService';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -48,7 +47,7 @@ export const AddCustomSettingModal: React.FC<AddCustomSettingModalProps> = ({
   onAddCustomItem,
   existingIds,
 }) => {
-  const [tab, setTab] = useState<'custom' | 'sniffer' | 'presets'>('custom');
+  const [tab, setTab] = useState<'custom' | 'presets'>('custom');
 
   // Form states - simplified
   const [title, setTitle] = useState('');
@@ -59,10 +58,6 @@ export const AddCustomSettingModal: React.FC<AddCustomSettingModalProps> = ({
   const [category, setCategory] = useState<SettingCategory>('system');
   const [accentColor, setAccentColor] = useState(ACCENT_COLORS[0]);
   const [selectedIntentTitle, setSelectedIntentTitle] = useState('');
-
-  // Sniffer states
-  const [capturedScreen, setCapturedScreen] = useState<CapturedScreen | null>(null);
-  const [isServiceEnabled, setIsServiceEnabled] = useState(false);
 
   // Animations: Popup spring/fade and Keyboard upward shift
   const [popupAnim] = useState(() => new Animated.Value(0));
@@ -110,13 +105,6 @@ export const AddCustomSettingModal: React.FC<AddCustomSettingModalProps> = ({
         tension: 70,
         useNativeDriver: true,
       }).start();
-
-      ScreenDetector.isServiceEnabled().then(enabled => {
-        setIsServiceEnabled(enabled);
-      });
-      ScreenDetector.getLastCapturedScreen().then(screen => {
-        if (screen) setCapturedScreen(screen);
-      });
     } else {
       popupAnim.setValue(0);
       keyboardShiftAnim.setValue(0);
@@ -134,13 +122,6 @@ export const AddCustomSettingModal: React.FC<AddCustomSettingModalProps> = ({
       onClose();
     });
   };
-
-  useEffect(() => {
-    const sub = ScreenDetector.subscribe(screen => {
-      setCapturedScreen(screen);
-    });
-    return () => sub.remove();
-  }, []);
 
   // Live Smart Intent Suggestions based on user's title input
   const suggestions = useMemo(() => {
@@ -162,19 +143,6 @@ export const AddCustomSettingModal: React.FC<AddCustomSettingModalProps> = ({
     if (s.className) setClassName(s.className);
   };
 
-  const handleApplyCapturedScreen = () => {
-    if (!capturedScreen) return;
-    const cleanClassName = capturedScreen.className.split('.').pop() || 'Custom Screen';
-    const cleanTitle = cleanClassName.replace(/([A-Z])/g, ' $1').trim();
-    setTitle(cleanTitle);
-    setShortDescription(`Direct shortcut to ${capturedScreen.packageName}`);
-    setAction('android.intent.action.MAIN');
-    setPackageName(capturedScreen.packageName);
-    setClassName(capturedScreen.className);
-    setSelectedIntentTitle(cleanTitle);
-    setTab('custom');
-  };
-
   const resetForm = () => {
     setTitle('');
     setShortDescription('');
@@ -184,7 +152,6 @@ export const AddCustomSettingModal: React.FC<AddCustomSettingModalProps> = ({
     setCategory('system');
     setAccentColor(ACCENT_COLORS[0]);
     setSelectedIntentTitle('');
-    setCapturedScreen(null);
   };
 
   const handleTestIntent = async (testAction: string, pkg?: string, cls?: string) => {
@@ -336,24 +303,6 @@ export const AddCustomSettingModal: React.FC<AddCustomSettingModalProps> = ({
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.segmentBtn, tab === 'sniffer' && styles.segmentBtnActive]}
-                onPress={() => {
-                  Keyboard.dismiss();
-                  setTab('sniffer');
-                }}
-                activeOpacity={0.8}
-              >
-                <MaterialCommunityIcons
-                  name="radar"
-                  size={15}
-                  color={tab === 'sniffer' ? Colors.textPrimary : Colors.textMuted}
-                />
-                <Text style={[styles.segmentText, tab === 'sniffer' && styles.segmentTextActive]}>
-                  Screen Detect
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
                 style={[styles.segmentBtn, tab === 'presets' && styles.segmentBtnActive]}
                 onPress={() => {
                   Keyboard.dismiss();
@@ -500,105 +449,7 @@ export const AddCustomSettingModal: React.FC<AddCustomSettingModalProps> = ({
               </ScrollView>
             )}
 
-            {/* Tab 2: Screen Detect */}
-            {tab === 'sniffer' && (
-              <ScrollView
-                style={[styles.sheetScroll, { maxHeight: scrollMaxHeight }]}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 40 }}
-                keyboardShouldPersistTaps="handled"
-                keyboardDismissMode="on-drag"
-              >
-                <View style={styles.snifferGuideCard}>
-                  <MaterialCommunityIcons name="radar" size={30} color={Colors.emerald} />
-                  <Text style={styles.snifferGuideTitle}>Live Screen Detection</Text>
-                  <Text style={styles.snifferGuideText}>
-                    Navigate to any settings screen on your phone, then return to Redirect to automatically capture its exact package and activity class.
-                  </Text>
-                </View>
-
-                {/* Service Status */}
-                <View style={styles.statusBox}>
-                  <View style={styles.statusRow}>
-                    <Text style={styles.statusLabel}>Detector Status:</Text>
-                    <View style={[styles.statusPill, isServiceEnabled ? styles.statusPillOn : styles.statusPillOff]}>
-                      <Text style={styles.statusPillText}>{isServiceEnabled ? 'READY' : 'SETUP REQUIRED'}</Text>
-                    </View>
-                  </View>
-
-                  {!isServiceEnabled && (
-                    <TouchableOpacity
-                      style={styles.enableServiceBtn}
-                      onPress={() => launchSettingsIntent({ action: 'android.settings.ACCESSIBILITY_SETTINGS' })}
-                      activeOpacity={0.8}
-                    >
-                      <MaterialCommunityIcons name="shield-lock-outline" size={16} color="#FFFFFF" />
-                      <Text style={styles.enableServiceBtnText}>Enable &quot;Redirect Screen Detector&quot; in Accessibility</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-
-                {/* Live Captured Screen Box */}
-                {capturedScreen ? (
-                  <View style={styles.capturedResultCard}>
-                    <View style={styles.capturedHeaderRow}>
-                      <MaterialCommunityIcons name="check-decagram" size={18} color={Colors.emerald} />
-                      <Text style={styles.capturedHeaderTitle}>Target Screen Detected!</Text>
-                    </View>
-
-                    <View style={styles.resultField}>
-                      <Text style={styles.resultLabel}>Package:</Text>
-                      <Text style={styles.resultValue}>{capturedScreen.packageName}</Text>
-                    </View>
-
-                    <View style={styles.resultField}>
-                      <Text style={styles.resultLabel}>Activity Class:</Text>
-                      <Text style={styles.resultValue}>{capturedScreen.className}</Text>
-                    </View>
-
-                    <View style={styles.capturedActionsRow}>
-                      <TouchableOpacity
-                        style={styles.testCapturedBtn}
-                        onPress={() => handleTestIntent('android.intent.action.MAIN', capturedScreen.packageName, capturedScreen.className)}
-                        activeOpacity={0.8}
-                      >
-                        <Text style={styles.testCapturedBtnText}>Test Screen</Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={styles.applyCapturedBtn}
-                        onPress={handleApplyCapturedScreen}
-                        activeOpacity={0.85}
-                      >
-                        <Text style={styles.applyCapturedBtnText}>Use This Shortcut</Text>
-                        <MaterialCommunityIcons name="arrow-right" size={14} color="#FFFFFF" />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                ) : (
-                  <View style={styles.waitingCard}>
-                    <MaterialCommunityIcons name="cellphone-sound" size={28} color={Colors.textMuted} />
-                    <Text style={styles.waitingText}>
-                      Navigate to any settings page right now, then return here.
-                    </Text>
-                    <TouchableOpacity
-                      style={styles.refreshBtn}
-                      onPress={async () => {
-                        const screen = await ScreenDetector.getLastCapturedScreen();
-                        if (screen) setCapturedScreen(screen);
-                        else Alert.alert('Listening...', 'No external settings screen detected yet. Open your Settings app first.');
-                      }}
-                      activeOpacity={0.8}
-                    >
-                      <MaterialCommunityIcons name="refresh" size={16} color={Colors.textPrimary} />
-                      <Text style={styles.refreshBtnText}>Check Latest Screen</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </ScrollView>
-            )}
-
-            {/* Tab 3: Presets Library */}
+            {/* Tab 2: Presets Library */}
             {tab === 'presets' && (
               <ScrollView
                 style={[styles.sheetScroll, { maxHeight: scrollMaxHeight }]}
